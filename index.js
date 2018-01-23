@@ -42,19 +42,59 @@ bot.onText(/\/sign\/\w+/, (msg) => {
 })
 
 bot.onText(/\/learn/, async (msg) => {
-  console.log(storage.getItemSync('user'));
-  bot.removeTextListener(/\/login/);
+  storage.initSync();
+  let username = storage.getItemSync('user');
   const chatId = msg.chat.id;
   const learn = messages.learn;
-  bot.sendMessage(chatId, learn, {parse_mode: 'Markdown'})
-  // bot.sendMessage
+  const correct = messages.correct;
+  const incorrect = messages.incorrect;
+  const finished = messages.finished;
+  await bot.sendMessage(chatId, learn, {parse_mode: 'Markdown'})
+  await axios.get('http://Karina-MacBookPro.local:3000/words-user', {
+    data: {
+      username
+    }
+  })
+    .then(function (response) {
+      storage.initSync();
+      for (let i = 0; i < response.data.length; i++) {
+        let key = 'key' + i;
+        storage.setItemSync(key, response.data[i])
+      }
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+  let object = storage.valuesWithKeyMatch(/key/);
+  let counter = 1;
+  doQuestion = async (object) => {
+    if (object.length > 0) {
+      bot.sendMessage(chatId, Object.keys(object[0])[0]);
+      let regex = new RegExp(counter + '\\w+');
+      bot.onText(regex, async (msg) => {
+        let regex2 = new RegExp(counter)
+        let word = msg.text.split(regex2)[1];
+        if (word === Object.values(object[0])[0]) {
+          await bot.sendMessage(chatId, correct, {parse_mode: 'Markdown'})
+          await object.shift();
+          counter++;
+          doQuestion(object);
+        } else {
+          bot.sendMessage(chatId, incorrect, {parse_mode: 'Markdown'})
+        }
+      })
+    } else {
+      bot.sendMessage(chatId, finished, {parse_mode: 'Markdown'})
+      storage.clearSync();
+    }
+  }
+  doQuestion(object);
 })
 
-
-// axios.get('http://Karina-MacBookPro.local:3000/get-user')
-//   .then(function (response) {
-//   console.log(response);
-//   })
-//   .catch(function (error) {
-//   console.log(error);
-//   });
+bot.onText(/\/stop/, async (msg) => {
+  const chatId = msg.chat.id;
+  const stop = messages.stop;
+  storage.initSync();
+  bot.sendMessage(chatId, stop, {parse_mode: 'Markdown'})
+  storage.clearSync();
+})

@@ -1,28 +1,42 @@
 module.exports = {
   start: `
   I am going to help you with words memorizing!
-  Go to the website to create your account If you still haven't done so.
-  Introduce this words to me so I can memorize them and then make you memorize them 😊.
 
-  When you ready send /login ... And follow instructions
+Go to the website to create your account If you still haven't done so.
+Introduce this words to me so I can memorize them and then make you memorize them 😊.
+
+When you ready send /login ... And follow instructions
   `,
   login: `
     Please type your username to enter your account
-    Use following syntax -> /sign/username
+
+Use following syntax -> /sign/*username*
   `,
   userNotCreated: `
-    Oops you didnt create user yet.
-    Go [here](https://github.com/) to create one
+Oops you didnt create user yet.
+Go [here](https://github.com/) to create one
   `,
   userIsHere: `
     Hey I remember you! Thanks for creating profile earlier.
-    You are ready to start learning🤓
-    Send /learn  - To start learning sprint
+You are ready to start learning🤓
+Send /learn  - To start learning sprint
   `,
   learn: `
     It's happening!🔥🔥🔥
-    Now you can show me what you've learned
-    Counter the words with the translation.
-    Don't worry I'll let you know when you are wrong🙊
+Now you can show me what you've learned
+Counter the words with the translation.
+Don't worry I'll let you know when you are wrong🙊
+  `,
+  stop: `
+    Byeee✌️
+  `,
+  correct: `
+    It was correct👌
+    `,
+  incorrect: `
+    Nope 🙅
+  `,
+  finished: `
+    Sprint done!
   `
 }
