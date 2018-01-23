@@ -38,5 +38,9 @@ Don't worry I'll let you know when you are wrong🙊
   `,
   finished: `
     Sprint done!
+  `,
+  invalid: `
+    Ooops invalid format😢
+Unfortunatelly *CurrentNumber+Answer* (1hello) is the only available format for now
   `
 }

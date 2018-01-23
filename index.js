@@ -49,6 +49,7 @@ bot.onText(/\/learn/, async (msg) => {
   const correct = messages.correct;
   const incorrect = messages.incorrect;
   const finished = messages.finished;
+  const invalid = messages.invalid;
   await bot.sendMessage(chatId, learn, {parse_mode: 'Markdown'})
   await axios.get('http://Karina-MacBookPro.local:3000/words-user', {
     data: {
@@ -83,6 +84,12 @@ bot.onText(/\/learn/, async (msg) => {
           bot.sendMessage(chatId, incorrect, {parse_mode: 'Markdown'})
         }
       })
+      // bot.onText(/[A-Za-z]+/, async (msg) => {
+      //   bot.sendMessage(chatId, invalid,{parse_mode: 'Markdown'});
+      // })
+      // bot.onText(/[^A-Za-z]+/, async (msg) => {
+      //   bot.sendMessage(chatId, invalid,{parse_mode: 'Markdown'});
+      // })
     } else {
       bot.sendMessage(chatId, finished, {parse_mode: 'Markdown'})
       storage.clearSync();
