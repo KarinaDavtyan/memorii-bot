@@ -8,6 +8,7 @@ module.exports = {
   `,
   login: `
     Please type your username to enter your account
+    Use following syntax -> /sign/username
   `,
   userNotCreated: `
     Oops you didnt create user yet.
@@ -17,6 +18,11 @@ module.exports = {
     Hey I remember you! Thanks for creating profile earlier.
     You are ready to start learning🤓
     Send /learn  - To start learning sprint
-    Send /stop - To stop ongoing sprint
+  `,
+  learn: `
+    It's happening!🔥🔥🔥
+    Now you can show me what you've learned
+    Counter the words with the translation.
+    Don't worry I'll let you know when you are wrong🙊
   `
 }
