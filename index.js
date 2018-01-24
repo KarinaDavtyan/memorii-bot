@@ -14,12 +14,6 @@ bot.onText(/\/start/, (msg) => {
   bot.sendMessage(chatId, startMsg, {parse_mode: 'Markdown'});
 })
 
-bot.onText(/\/login/, async (msg) => {
-  const chatId = msg.chat.id;
-  const login = messages.login;
-  bot.sendMessage(chatId, login, {parse_mode: 'Markdown'});
-})
-
 bot.onText(/\/sign\/\w+/, (msg) => {
   const chatId = msg.chat.id;
   const noUser = messages.userNotCreated;
@@ -67,12 +61,20 @@ bot.onText(/\/learn/, async (msg) => {
       console.log(error);
     });
   let object = storage.valuesWithKeyMatch(/key/);
+  console.log(username);
+
   let counter = 1;
   doQuestion = async (object) => {
     if (object.length > 0) {
       bot.sendMessage(chatId, Object.keys(object[0])[0]);
-      let regex = new RegExp(counter + '\\w+');
+      let regex;
+      if (username === 'Japan') {
+        regex = new RegExp(counter + '[ぁ-んァ-ン]|[一-龯]')
+      } else {
+        regex = new RegExp(counter + '\\w+');
+      }
       bot.onText(regex, async (msg) => {
+        console.log(msg.text);
         let regex2 = new RegExp(counter)
         let word = msg.text.split(regex2)[1];
         if (word === Object.values(object[0])[0]) {
@@ -84,12 +86,6 @@ bot.onText(/\/learn/, async (msg) => {
           bot.sendMessage(chatId, incorrect, {parse_mode: 'Markdown'})
         }
       })
-      // bot.onText(/[A-Za-z]+/, async (msg) => {
-      //   bot.sendMessage(chatId, invalid,{parse_mode: 'Markdown'});
-      // })
-      // bot.onText(/[^A-Za-z]+/, async (msg) => {
-      //   bot.sendMessage(chatId, invalid,{parse_mode: 'Markdown'});
-      // })
     } else {
       bot.sendMessage(chatId, finished, {parse_mode: 'Markdown'})
       storage.clearSync();
@@ -105,3 +101,16 @@ bot.onText(/\/stop/, async (msg) => {
   bot.sendMessage(chatId, stop, {parse_mode: 'Markdown'})
   storage.clearSync();
 })
+
+bot.onText(/\/help/, (msg) => {
+  const chatId = msg.chat.id;
+  const helpMsg = messages.help
+  bot.sendMessage(chatId, helpMsg, {parse_mode: 'Markdown'});
+})
+
+// bot.onText(/[A-Za-z]+/, async (msg) => {
+//   bot.sendMessage(chatId, invalid,{parse_mode: 'Markdown'});
+// })
+// bot.onText(/[^A-Za-z]+/, async (msg) => {
+//   bot.sendMessage(chatId, invalid,{parse_mode: 'Markdown'});
+// })
