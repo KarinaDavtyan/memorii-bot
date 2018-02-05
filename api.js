@@ -2,6 +2,9 @@ const axios = require('axios');
 const redis = require('redis'),
   client = redis.createClient();
 
+client.send_command('CLIENT', ['SETNAME', 'memorii'], (err, res) => {});
+
+
 UserData = (username) => {
   axios.get('http://Karina-MacBookPro.local:3000/selections-bot', {
     data: {
@@ -10,8 +13,7 @@ UserData = (username) => {
   })
     .then(function (response) {
       console.log(response.data);
-      //append selections to SET
-      // client.hmset('selections', response.data, function (err, res) {});
+      client.sadd('selections', response.data, function (err, res) {});
     })
     .catch((e) => {
       e.response.status === 404
@@ -20,7 +22,7 @@ UserData = (username) => {
     })
 }
 
-UserData('test')
+UserData('Karina')
 // client.hgetall('selections', function (err, reply) {
 //   console.log(reply);
 // })
