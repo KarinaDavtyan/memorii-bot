@@ -6,6 +6,9 @@ const axios = require('axios');
 const bot = new TelegramBot(token, {polling: true});
 const messages = require('./messages/index');
 
+const NodeCache = require('node-cache');
+const myCache = new NodeCache();
+
 UserData = (username, yes, no, noSelections, chatId, errorAlert) => {
   axios.get('http://Karina-MacBookPro.local:3000/user-bot', {
     data: {
@@ -35,6 +38,9 @@ UserData = (username, yes, no, noSelections, chatId, errorAlert) => {
 
 }
 
+bot.on('polling_error', (error) => {
+  console.log(error, 'error');
+});
 
 bot.onText(/\/start/, (msg) => {
   console.log(msg);
@@ -68,19 +74,60 @@ bot.onText(/\/selections/, (msg) => {
         }]
       });
       var options = { reply_markup: JSON.stringify({
-        keyboard: list
+        inline_keyboard: list
       })};
       bot.sendMessage(chatId, 'Selections', options);
-      bot.on('callback_query', function (msg) {
-        bot.answerCallbackQuery(msg.id, msg.data, true);
-      })
     })
     .catch((e) => {
       e.response.status === 404
-        ? client.hmset('errors', ['selections', 'no selections'], (err, res) => {})
+        ? bot.sendMessage(chatId, messages.errorAlert, {parse_mode: 'Markdown'})
         : console.log(e.response.status);
     })
+})
 
+
+bot.on('callback_query', (msg) => {
+  const chatId = msg.from.id;
+  bot.sendMessage(chatId, messages.selected(msg.data), {parse_mode: 'Markdown'});
+  axios.get('http://Karina-MacBookPro.local:3000/all-words-bot', {
+    data: {
+      title: msg.data
+    }
+  })
+    .then((response) => {
+      train = () => {
+        let first = response.data[0];
+        let second = response.data[1];
+        if (first.length > 0) {
+          bot.sendMessage(chatId, messages.question(first[0]), {parse_mode: 'Markdown'});
+          let regex = new RegExp(second[0]);
+          let excRegex = new RegExp(`\\b(?!${second[0]}|/selections)\\b\\S+`); //everything except second[0] or /selections
+          bot.onText(regex, (msg) => {
+            console.log(first.length);
+            console.log(msg.text, second[0],first.length,'correct');
+            bot.sendMessage(chatId, messages.correct, {parse_mode: 'Markdown'})
+            bot.removeTextListener(excRegex);
+            first.shift();
+            second.shift();
+            if (first.length === 0 ) {
+              bot.sendMessage(chatId, messages.finished, {parse_mode: 'Markdown'})
+            }
+            train();
+          })
+          bot.onText(excRegex, (msg) => {
+            console.log(msg.text, second[0], first.length, 'incorrect');
+            console.log(second[0].match(regex), second[0].match(excRegex), 'inside excRegex');
+            bot.sendMessage(chatId, messages.incorrect, {parse_mode: 'Markdown'});
+          })
+        }
+      }
+      train();
+    })
+    .catch((e) => {
+      e.response.status === 404
+        ? bot.sendMessage(chatId, messages.emptySelection(msg.data), {parse_mode: 'Markdown'})
+        : console.log(e.response.status);
+    })
 })
 
 bot.onText(/\/learn/, async (msg) => {

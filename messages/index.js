@@ -21,6 +21,15 @@ Oops seems that you dont have any learning selections yet
 You are ready to start learning🤓
 Send /selections to see your selections list
   `,
+  selected: (selected) => {
+    return `${selected}`
+  },
+  emptySelection: (selected) => {
+    return `*${selected}* is empty`
+  },
+  question: (word) => {
+    return `-*${word}*-`
+  },
   learn: `
     It's happening!🔥🔥🔥
 Now you can show me what you've learned
