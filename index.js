@@ -87,6 +87,8 @@ bot.onText(/\/selections/, (msg) => {
 
 
 bot.on('callback_query', (msg) => {
+  console.log('outside');
+  console.log(msg);
   const chatId = msg.from.id;
   bot.sendMessage(chatId, messages.selected(msg.data), {parse_mode: 'Markdown'});
   axios.get('http://Karina-MacBookPro.local:3000/all-words-bot', {
@@ -98,32 +100,42 @@ bot.on('callback_query', (msg) => {
       train = () => {
         let first = response.data[0];
         let second = response.data[1];
+        console.log('first', first);
         if (first.length > 0) {
           bot.sendMessage(chatId, messages.question(first[0]), {parse_mode: 'Markdown'});
-          let regex = new RegExp(second[0]);
-          let excRegex = new RegExp(`\\b(?!${second[0]}|/selections)\\b\\S+`); //everything except second[0] or /selections
+          let regex = new RegExp(`${second[0]}`);
+          let excRegex = new RegExp(`(?![${second[0]}])\\S+`); //everything except second[0] or /selections
+          console.log(excRegex);
           bot.onText(regex, (msg) => {
-            console.log(first.length);
-            console.log(msg.text, second[0],first.length,'correct');
-            bot.sendMessage(chatId, messages.correct, {parse_mode: 'Markdown'})
-            bot.removeTextListener(excRegex);
-            first.shift();
-            second.shift();
-            if (first.length === 0 ) {
-              bot.sendMessage(chatId, messages.finished, {parse_mode: 'Markdown'})
-            }
-            train();
+            setTimeout(() => {
+              console.log(first.length, second.length);
+              console.log(msg.text, second[0],first.length,'correct');
+              bot.sendMessage(chatId, messages.correct, {parse_mode: 'Markdown'})
+              bot.removeTextListener(excRegex);
+              first.shift();
+              second.shift();
+              if (first.length === 0 ) {
+                bot.sendMessage(chatId, messages.stop, {parse_mode: 'Markdown'})
+              }
+              train();
+            }, 500)
           })
           bot.onText(excRegex, (msg) => {
             console.log(msg.text, second[0], first.length, 'incorrect');
-            console.log(second[0].match(regex), second[0].match(excRegex), 'inside excRegex');
-            bot.sendMessage(chatId, messages.incorrect, {parse_mode: 'Markdown'});
+            if (msg.text == '-stop') {
+              bot.removeTextListener(excRegex);
+              first = [];
+              bot.sendMessage(chatId, messages.stop, {parse_mode: 'Markdown'})
+            } else {
+              bot.sendMessage(chatId, messages.incorrect, {parse_mode: 'Markdown'});
+            }
           })
         }
       }
       train();
     })
     .catch((e) => {
+      console.log('here');
       e.response.status === 404
         ? bot.sendMessage(chatId, messages.emptySelection(msg.data), {parse_mode: 'Markdown'})
         : console.log(e.response.status);
@@ -198,10 +210,3 @@ bot.onText(/\/help/, (msg) => {
   const helpMsg = messages.help
   bot.sendMessage(chatId, helpMsg, {parse_mode: 'Markdown'});
 })
-
-// bot.onText(/[A-Za-z]+/, async (msg) => {
-//   bot.sendMessage(chatId, invalid,{parse_mode: 'Markdown'});
-// })
-// bot.onText(/[^A-Za-z]+/, async (msg) => {
-//   bot.sendMessage(chatId, invalid,{parse_mode: 'Markdown'});
-// })
