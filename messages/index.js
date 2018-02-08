@@ -13,11 +13,23 @@ Use following syntax -> /sign/*username*
 Oops you didnt create user yet.
 Go [here](https://github.com/) to create one
   `,
+  noSelections: `
+Oops seems that you dont have any learning selections yet
+  `,
   userIsHere: `
     Hey I remember you! Thanks for creating profile earlier.
 You are ready to start learning🤓
-Send /learn  - To start learning sprint
+Send /selections to see your selections list
   `,
+  selected: (selected) => {
+    return `${selected}`
+  },
+  emptySelection: (selected) => {
+    return `*${selected}* is empty`
+  },
+  question: (word) => {
+    return `-*${word}*-`
+  },
   learn: `
     It's happening!🔥🔥🔥
 Now you can show me what you've learned
@@ -48,5 +60,9 @@ MemoriiBot commands:
 /sign/*username* - log in to your account,
 /learn - start learning sprint,
 /stop - stop sprint and clear current session
+  `,
+  errorAlert: `
+Something went wrong. There might be problems on the server
+Try again later.
   `
 }

@@ -2,13 +2,48 @@ require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const token = process.env.TELEGRAM_TOKEN;
 const axios = require('axios');
-const storage = require('node-persist');
 
 const bot = new TelegramBot(token, {polling: true});
-
 const messages = require('./messages/index');
 
+const NodeCache = require('node-cache');
+const myCache = new NodeCache();
+
+UserData = (username, yes, no, noSelections, chatId, errorAlert) => {
+  axios.get('http://Karina-MacBookPro.local:3000/user-bot', {
+    data: {
+      username
+    }
+  })
+    .then(response => {
+      bot.sendMessage(chatId, yes, {parse_mode: 'Markdown'});
+      return axios.post('http://Karina-MacBookPro.local:3000/id-bot', {
+        data: {
+          telegramId: chatId,
+          username
+        }
+      })
+        .then((response) => {
+          console.log(response.data);
+        })
+        .catch((error) => {
+          console.log('error');
+        });
+    })
+    .catch((e) => {
+      e.response.status === 404
+        ? bot.sendMessage(chatId, no, {parse_mode: 'Markdown'})
+        : bot.sendMessage(chatId, errorAlert, {parse_mode: 'Markdown'})
+    })
+
+}
+
+bot.on('polling_error', (error) => {
+  console.log(error, 'error');
+});
+
 bot.onText(/\/start/, (msg) => {
+  console.log(msg);
   const chatId = msg.chat.id;
   const startMsg = messages.start
   bot.sendMessage(chatId, startMsg, {parse_mode: 'Markdown'});
@@ -18,21 +53,81 @@ bot.onText(/\/sign\/\w+/, (msg) => {
   const chatId = msg.chat.id;
   const noUser = messages.userNotCreated;
   const yesUser = messages.userIsHere;
+  const noSelections = messages.noSelections;
+  const errorAlert = messages.errorAlert;
   let username = msg.text.split(/\/sign\//)[1];
-  axios.get('http://Karina-MacBookPro.local:3000/get-user', {
+  UserData(username, yesUser, noUser, noSelections, chatId, errorAlert);
+})
+
+bot.onText(/\/selections/, (msg) => {
+  const chatId = msg.chat.id;
+  axios.get('http://Karina-MacBookPro.local:3000/selections-bot', {
     data: {
-      username
+      telegramId: chatId
     }
   })
     .then(function (response) {
-      storage.initSync();
-      storage.setItemSync('user', response.data.username)
-      bot.sendMessage(chatId, yesUser, {parse_mode: 'Markdown'})
+      let list = response.data.map(select => {
+        return [{
+          text: select,
+          callback_data: select
+        }]
+      });
+      var options = { reply_markup: JSON.stringify({
+        inline_keyboard: list
+      })};
+      bot.sendMessage(chatId, 'Selections', options);
     })
-    .catch(function (error) {
-      console.log('login error');
-      bot.sendMessage(chatId, noUser, {parse_mode: 'Markdown'})
-    });
+    .catch((e) => {
+      e.response.status === 404
+        ? bot.sendMessage(chatId, messages.errorAlert, {parse_mode: 'Markdown'})
+        : console.log(e.response.status);
+    })
+})
+
+
+bot.on('callback_query', (msg) => {
+  const chatId = msg.from.id;
+  bot.sendMessage(chatId, messages.selected(msg.data), {parse_mode: 'Markdown'});
+  axios.get('http://Karina-MacBookPro.local:3000/all-words-bot', {
+    data: {
+      title: msg.data
+    }
+  })
+    .then((response) => {
+      train = () => {
+        let first = response.data[0];
+        let second = response.data[1];
+        if (first.length > 0) {
+          bot.sendMessage(chatId, messages.question(first[0]), {parse_mode: 'Markdown'});
+          let regex = new RegExp(second[0]);
+          let excRegex = new RegExp(`\\b(?!${second[0]}|/selections)\\b\\S+`); //everything except second[0] or /selections
+          bot.onText(regex, (msg) => {
+            console.log(first.length);
+            console.log(msg.text, second[0],first.length,'correct');
+            bot.sendMessage(chatId, messages.correct, {parse_mode: 'Markdown'})
+            bot.removeTextListener(excRegex);
+            first.shift();
+            second.shift();
+            if (first.length === 0 ) {
+              bot.sendMessage(chatId, messages.finished, {parse_mode: 'Markdown'})
+            }
+            train();
+          })
+          bot.onText(excRegex, (msg) => {
+            console.log(msg.text, second[0], first.length, 'incorrect');
+            console.log(second[0].match(regex), second[0].match(excRegex), 'inside excRegex');
+            bot.sendMessage(chatId, messages.incorrect, {parse_mode: 'Markdown'});
+          })
+        }
+      }
+      train();
+    })
+    .catch((e) => {
+      e.response.status === 404
+        ? bot.sendMessage(chatId, messages.emptySelection(msg.data), {parse_mode: 'Markdown'})
+        : console.log(e.response.status);
+    })
 })
 
 bot.onText(/\/learn/, async (msg) => {
@@ -68,11 +163,7 @@ bot.onText(/\/learn/, async (msg) => {
     if (object.length > 0) {
       bot.sendMessage(chatId, Object.keys(object[0])[0]);
       let regex;
-      if (username === 'Japan') {
-        regex = new RegExp(counter + '[ぁ-んァ-ン]|[一-龯]')
-      } else {
-        regex = new RegExp(counter + '\\w+');
-      }
+      regex = new RegExp(counter + '\\w+');
       bot.onText(regex, async (msg) => {
         console.log(msg.text);
         let regex2 = new RegExp(counter)
