@@ -3,7 +3,6 @@ module.exports = {
   I am going to help you with words memorizing!
 
 Go to the website to create your account If you still haven't done so.
-Introduce this words to me so I can memorize them and then make you memorize them 😊.
 
 When you ready send type your username to enter your account
 
