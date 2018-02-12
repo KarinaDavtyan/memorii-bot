@@ -145,6 +145,7 @@ bot.on('callback_query', (msg) => {
     })
     .catch((e) => {
       console.log('here error on callback_query');
+
       e.response.status === 404
         ? bot.sendMessage(chatId, messages.emptySelection(msg.data), {parse_mode: 'Markdown'})
         : console.log(e.response.status);
