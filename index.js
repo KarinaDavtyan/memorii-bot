@@ -10,19 +10,26 @@ const messages = require('./messages/index');
 const NodeCache = require('node-cache');
 const myCache = new NodeCache();
 
+let URL;
+if (process.env.SERVER) {
+  URL = process.env.SERVER;
+} else {
+  URL = 'http://Karina-MacBookPro.local:3000'
+}
+
 bot.on('polling_error', (error) => {
   console.log(error, 'error');
 });
 
 UserData = (username, yes, no, noSelections, chatId, errorAlert) => {
-  axios.get('http://Karina-MacBookPro.local:3000/user-bot', {
+  axios.get(`${URL}/user-bot`, {
     data: {
       username
     }
   })
     .then(response => {
       bot.sendMessage(chatId, yes, {parse_mode: 'Markdown'});
-      return axios.post('http://Karina-MacBookPro.local:3000/id-bot', {
+      return axios.post(`${URL}/id-bot`, {
         data: {
           telegramId: chatId,
           username
@@ -62,7 +69,7 @@ bot.onText(/\/sign\/\w+/, (msg) => {
 
 bot.onText(/\/selections/, (msg) => {
   const chatId = msg.chat.id;
-  axios.get('http://Karina-MacBookPro.local:3000/selections-bot', {
+  axios.get(`${URL}/selections-bot`, {
     data: {
       telegramId: chatId
     }
@@ -102,7 +109,7 @@ bot.onText(/\S+/, (msg) => {
   // console.log(selections.includes(msg.text));
   if (selections.includes(msg.text)) {
     const chatId = msg.from.id;
-    axios.get('http://Karina-MacBookPro.local:3000/all-words-bot', {
+    axios.get(`${URL}/all-words-bot`, {
       data: {
         title: msg.text
       }
@@ -242,7 +249,7 @@ bot.onText(/\/learn/, async (msg) => {
   const finished = messages.finished;
   const invalid = messages.invalid;
   await bot.sendMessage(chatId, learn, {parse_mode: 'Markdown'})
-  await axios.get('http://Karina-MacBookPro.local:3000/words-user', {
+  await axios.get(`${URL}/words-user`, {
     data: {
       username
     }
