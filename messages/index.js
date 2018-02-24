@@ -2,7 +2,7 @@ module.exports = {
   start: `
   I am going to help you with words memorizing!
 
-Go to the [website](https://memorii-server.herokuapp.com/register) to create your account If you still haven't done so.
+Go to the [website](https://memorii.herokuapp.com) to create your account If you still haven't done so.
 
 When you ready send type your username to enter your account
 
@@ -10,7 +10,7 @@ Use following syntax -> /sign/*username*
   `,
   userNotCreated: `
 Oops you didnt create user yet.
-Go [here](https://memorii-server.herokuapp.com/register) to create one
+Go [here](https://memorii.herokuapp.com/register) to create one
   `,
   noSelections: `
 Oops seems that you dont have any learning selections yet
