@@ -6,7 +6,8 @@ app.get('/', (req, res) => {
   res.send({ hey: 'MemoriiBot' });
 });
 
-const server = app.listen(process.env.PORT, () =>  {
+
+const server = app.listen(process.env.PORT || 3002, () =>  {
   const host = server.address().address;
   const port = server.address().port;
 
