@@ -8,8 +8,6 @@ app.get('/', (req, res) => {
 
 
 const server = app.listen(process.env.PORT || 3002, () =>  {
-  const host = server.address().address;
   const port = server.address().port;
-
-  console.log('Web server started at http://%s:%s', host, port);
+  console.log(`Bot server listens on ${port} port`);
 });

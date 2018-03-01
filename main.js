@@ -73,21 +73,66 @@ bot.onText(/\/selections/, (msg) => {
       myCache.set('selections', response.data)
       let list = response.data.map(select => {
         return [{
-          text: select,
-          callback_data: select
+          text: select
         }]
       });
       var options = { reply_markup: JSON.stringify({
         keyboard: list,
-        force_reply:true,
-        one_time_keyboard: true
+        one_time_keyboard: true,
+        force_reply:true
       })};
       bot.sendMessage(chatId, 'Choose👇', options)
-        .then(payload => {
-          bot.onReplyToMessage(payload.chat.id, payload.message_id, msg => {
-            console.log(msg)
-            // bot.removeReplyListener(replyListenerId)
-          })
+        .then(() => {
+          answerCallbacks[chatId] = (selection) => {
+            axios.get(`${URL}/all-words-bot`, {
+              data: {
+                title: selection.text
+              }
+            })
+              .then((response) => {
+                train = () => {
+                  const telegramId = response.data[2]
+                  if (msg.from.id == telegramId) {
+                    let first = response.data[0];
+                    let second = response.data[1];
+                    if (first.length > 0) {
+                      let regex = new RegExp(`${second[0]}`);
+                      let excRegex = new RegExp(`(?![${second[0]}])\\S+`); //everything except second[0] or /selections
+                      bot.sendMessage(chatId, messages.question(first[0]), {parse_mode: 'Markdown'});
+                      bot.onText(regex, (msg) => {
+                        bot.sendMessage(chatId, messages.correct, {parse_mode: 'Markdown'})
+                        bot.removeTextListener(excRegex);
+                        first.shift();
+                        second.shift();
+                        if (first.length === 0 ) {
+                          bot.sendMessage(chatId, messages.stop, {parse_mode: 'Markdown'})
+                        }
+                        train();
+                      })
+                      bot.onText(excRegex, (msg) => {
+                        //for user to interrupt bot
+                        if (msg.text == '-stop') {
+                          bot.removeTextListener(excRegex);
+                          first = [];
+                          bot.sendMessage(chatId, messages.stop, {parse_mode: 'Markdown'})
+                        } else {
+                          bot.sendMessage(chatId, messages.incorrect, {parse_mode: 'Markdown'});
+                        }
+                      })
+                    }
+                  }
+                }
+                train();
+              })
+              .catch((e) => {
+                console.log('here error');
+                console.log(e.response);
+
+                e.response.status === 404
+                  ? bot.sendMessage(chatId, messages.emptySelection(msg.data), {parse_mode: 'Markdown'})
+                  : console.log(e.response.status);
+              })
+          };
         })
     })
     .catch((e) => {
@@ -97,82 +142,15 @@ bot.onText(/\/selections/, (msg) => {
     })
 })
 
+const answerCallbacks = {};
 
-
-// bot.onText(/\S+/, (msg) => {
-//   let selections;
-//   try {
-//     selections = myCache.get('selections', true);
-//   } catch (err) {
-//     console.log(err);
-//   }
-//   // console.log(selections);
-//   // console.log(msg);
-//   // console.log(selections.includes(msg.text));
-//   if (selections.includes(msg.text)) {
-//     const chatId = msg.from.id;
-//     axios.get(`${URL}/all-words-bot`, {
-//       data: {
-//         title: msg.text
-//       }
-//     })
-//       .then((response) => {
-//         train = () => {
-//           const telegramId = response.data[2]
-//           // console.log('  --------------------');
-//           // console.log(msg.from.id, telegramId);
-//           if (msg.from.id == telegramId) {
-//             let first = response.data[0];
-//             let second = response.data[1];
-//             // console.log('first', first);
-//             if (first.length > 0) {
-//               bot.sendMessage(chatId, messages.question(first[0]), {parse_mode: 'Markdown'});
-//               let regex = new RegExp(`${second[0]}`);
-//               let excRegex = new RegExp(`(?![${second[0]}])\\S+`); //everything except second[0] or /selections
-//               console.log(excRegex);
-//               bot.onText(regex, (msg) => {
-//                 // console.log(msg, 'heeere');
-//                 //works same without setTimeout
-//                 setTimeout(() => {
-//                   console.log(first.length, second.length);
-//                   console.log(msg.text, second[0],first.length,'correct');
-//                   bot.sendMessage(chatId, messages.correct, {parse_mode: 'Markdown'})
-//                   bot.removeTextListener(excRegex);
-//                   first.shift();
-//                   second.shift();
-//                   if (first.length === 0 ) {
-//                     bot.sendMessage(chatId, messages.stop, {parse_mode: 'Markdown'})
-//                   }
-//                   train();
-//                 }, 500)
-//               })
-//               bot.onText(excRegex, (msg) => {
-//                 // console.log(msg.text, second[0], first.length, 'incorrect');
-//                 //for user to interrupt bot
-//                 if (msg.text == '-stop') {
-//                   bot.removeTextListener(excRegex);
-//                   first = [];
-//                   bot.sendMessage(chatId, messages.stop, {parse_mode: 'Markdown'})
-//                 } else {
-//                   bot.sendMessage(chatId, messages.incorrect, {parse_mode: 'Markdown'});
-//                 }
-//               })
-//             }
-//           }
-//         }
-//         train();
-//       })
-//       .catch((e) => {
-//         console.log('here error');
-//         console.log(e.response);
-//
-//         e.response.status === 404
-//           ? bot.sendMessage(chatId, messages.emptySelection(msg.data), {parse_mode: 'Markdown'})
-//           : console.log(e.response.status);
-//       })
-//
-//   }
-// })
+bot.on('message', function (msg) {
+  const callback = answerCallbacks[msg.chat.id];
+  if (callback) {
+    delete answerCallbacks[msg.chat.id];
+    return callback(msg);
+  }
+});
 
 bot.onText(/\/help/, (msg) => {
   const chatId = msg.chat.id;
