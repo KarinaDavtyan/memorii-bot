@@ -98,23 +98,27 @@ bot.onText(/\/selections/, async msg => {
               const excRegex = new RegExp(`(?![${second[0]}])\\S+`); //everything except second[0] or /selections
               bot.sendMessage(chatId, messages.question(first[0]), {parse_mode: 'Markdown'});
               bot.onText(regex, (msg) => {
-                bot.sendMessage(chatId, messages.correct, {parse_mode: 'Markdown'})
-                bot.removeTextListener(excRegex);
-                first.shift();
-                second.shift();
-                if (first.length === 0 ) {
-                  bot.sendMessage(chatId, messages.stop, {parse_mode: 'Markdown'})
+                if (msg.from.id == telegramId) {
+                  bot.sendMessage(chatId, messages.correct, {parse_mode: 'Markdown'})
+                  bot.removeTextListener(excRegex);
+                  first.shift();
+                  second.shift();
+                  if (first.length === 0 ) {
+                    bot.sendMessage(chatId, messages.stop, {parse_mode: 'Markdown'})
+                  }
+                  train();
                 }
-                train();
               })
               bot.onText(excRegex, (msg) => {
-                //for user to interrupt bot
-                if (msg.text == '-stop') {
-                  bot.removeTextListener(excRegex);
-                  first = [];
-                  bot.sendMessage(chatId, messages.stop, {parse_mode: 'Markdown'})
-                } else {
-                  bot.sendMessage(chatId, messages.incorrect, {parse_mode: 'Markdown'});
+                if (msg.from.id == telegramId) {
+                  //for user to interrupt bot
+                  if (msg.text == '-stop') {
+                    bot.removeTextListener(excRegex);
+                    first = [];
+                    bot.sendMessage(chatId, messages.stop, {parse_mode: 'Markdown'})
+                  } else {
+                    bot.sendMessage(chatId, messages.incorrect, {parse_mode: 'Markdown'});
+                  }
                 }
               })
             }
