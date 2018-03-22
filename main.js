@@ -94,8 +94,8 @@ bot.onText(/\/selections/, async msg => {
             let first = response.data[0];
             const second = response.data[1];
             if (first.length > 0) {
-              const regex = new RegExp(`${second[0]}`);
-              const excRegex = new RegExp(`(?![${second[0]}])\\S+`); //everything except second[0] or /selections
+              const regex = new RegExp(`${second[0]}`, 'i');
+              const excRegex = new RegExp(`(?![${second[0]}])\\S+`, 'i'); //everything except second[0] or /selections
               bot.sendMessage(chatId, messages.question(first[0]), {parse_mode: 'Markdown'});
               bot.onText(regex, (msg) => {
                 if (msg.from.id == telegramId) {
@@ -103,9 +103,6 @@ bot.onText(/\/selections/, async msg => {
                   bot.removeTextListener(excRegex);
                   first.shift();
                   second.shift();
-                  if (first.length === 0 ) {
-                    bot.sendMessage(chatId, messages.stop, {parse_mode: 'Markdown'})
-                  }
                   train();
                 }
               })
@@ -121,6 +118,8 @@ bot.onText(/\/selections/, async msg => {
                   }
                 }
               })
+            } else {
+              bot.sendMessage(chatId, messages.stop, {parse_mode: 'Markdown'})
             }
           }
         }
