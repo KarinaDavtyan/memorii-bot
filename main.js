@@ -3,7 +3,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const token = process.env.TELEGRAM_TOKEN;
 const axios = require('axios');
 
-const bot = new TelegramBot(token, {polling: true});
+const bot = new TelegramBot(token, {polling: {interval: 500}});
 const messages = require('./messages/index');
 
 //not used now
@@ -32,7 +32,6 @@ const UserData = async (username, yes, no, noSelections, chatId, errorAlert) => 
       }
     })
     //eslint-disable-next-line
-    console.log(idBot);
   } catch (e) {
     e.response && e.response.status === 404
       ? bot.sendMessage(chatId, no, {parse_mode: 'Markdown'})
@@ -57,7 +56,7 @@ bot.onText(/\/sign\/\w+/, (msg) => {
   UserData(username, yesUser, noUser, noSelections, chatId, errorAlert);
 })
 
-bot.onText(/\/selections/, async msg => {
+bot.onText(/\/collections/, async msg => {
 
   try {
     const chatId = msg.chat.id;
@@ -67,7 +66,8 @@ bot.onText(/\/selections/, async msg => {
       }
     })
 
-    myCache.set('selections', response.data)
+    myCache.set('selections', response.data);
+
     const list = response.data.map(select => {
       return [{
         text: select
@@ -78,13 +78,14 @@ bot.onText(/\/selections/, async msg => {
       one_time_keyboard: true,
       force_reply:true
     })};
+
     await bot.sendMessage(chatId, 'Choose👇', options);
 
-    answerCallbacks[chatId] = async (selection) => {
+    answerCallbacks[chatId] = async (msg) => {
       try {
         const response = await axios.get(`${URL}/all-words-bot`, {
           data: {
-            title: selection.text
+            title: msg.text
           }
         })
 
@@ -133,14 +134,14 @@ bot.onText(/\/selections/, async msg => {
         e.response.status === 404
           ? bot.sendMessage(chatId, messages.emptySelection(msg.data), {parse_mode: 'Markdown'})
           //eslint-disable-next-line
-          : console.log(e.response.status);
+          : console.log(e.response.status, 'status');
       }
     };
   } catch (e) {
     e.response.status === 404
       ? bot.sendMessage(chatId, messages.errorAlert, {parse_mode: 'Markdown'})
       //eslint-disable-next-line
-      : console.log(e.response.status);
+      : console.log(e.response.status, 'status2');
   }
 })
 

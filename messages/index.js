@@ -13,12 +13,12 @@ Oops you didnt create user yet.
 Go [here](https://memorii.herokuapp.com/register) to create one
   `,
   noSelections: `
-Oops seems that you dont have any learning selections yet
+Oops seems that you dont have any learning collections yet
   `,
   userIsHere: `
     Hey I remember you! Thanks for creating profile earlier.
 You are ready to start learning🤓
-Send /selections to see your selections list
+Send /collections to see your collections list
   `,
   selected: (selected) => {
     return `${selected}`
@@ -45,7 +45,7 @@ Send /selections to see your selections list
 MemoriiBot commands:
 /start - get started with the Bot,
 /sign/*username* - log in to your account
-/selections - get list from your account
+/collections - show list of all your collections
   `,
   errorAlert: `
 Something went wrong. There might be problems on the server
