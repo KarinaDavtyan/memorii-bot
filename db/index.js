@@ -1,28 +1,43 @@
 const { MongoClient } = require('mongodb');
+const url = process.env.MONGOLAB_MEMORII;
+const dbName = 'memorii';
 
 const handleUserId = async (username, telegramId) => {
-  let db_;
-  await MongoClient.connect(process.env.MONGOLAB_MEMORII, (e, db) => {
-    if (e) console.log(e, 'error');
-    db_ = db;
-  });
+  let client;
   try {
-    const user = db
-      .collection('users')
-      .findOneAndUpdate(
-        { username: username },
-        {
-          $set: { telegramId: telegramId }
-        }
-      )
-      .then(res => console.log(res))
-    console.log(user);
-    return user;
-  } finally {
-    db.close();
+    client = await MongoClient.connect(url);
+    const db = client.db(dbName);
+    const collection = db.collection('users');
+
+    let user = await collection.findOneAndUpdate({ username}, {
+      $set: { telegramId }
+    })
+    return user.value;
+  } catch (err) {
+    console.log(err.stack);
   }
+  client.close();
+}
+
+const getCollections = async (telegramId) => {
+  let client;
+  try {
+    client = await MongoClient.connect(url);
+    const db = client.db(dbName);
+    const users = db.collection('users');
+    const selections = db.collection('selections');
+
+
+    let { _id } = await users.findOne({ telegramId });
+    let selectionArray = await selections.find({ owner: _id }).limit(8).toArray();
+    return selectionArray;
+  } catch (err) {
+    console.log(err.stack);
+  }
+  client.close();
 }
 
 module.exports = {
-  handleUserId
+  handleUserId,
+  getCollections
 }

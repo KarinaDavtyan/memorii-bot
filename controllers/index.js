@@ -16,15 +16,11 @@ const reply = async ({ userId, text }) => {
   }
 
   if (text === '/collections') {
-    const response = await axios.get(`${URL}/selections-bot`, {
-      data: {
-        telegramId: userId
-      }
-    })
+    const collections = await db.getCollections(userId);
 
-    const list = response.data.map(select => {
+    const list = collections.map(select => {
       return [{
-        text: select
+        text: select.title
       }]
     });
     const options = {
@@ -48,7 +44,6 @@ const reply = async ({ userId, text }) => {
 const UserData = async (username, userIsHere, userNotCreated, chatId, errorAlert) => {
   try {
     const user = await db.handleUserId(username, chatId);
-    console.log(user);
     if (user) {
       return {
         text: userIsHere,
