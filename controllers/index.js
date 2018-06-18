@@ -1,12 +1,7 @@
-const axios = require('axios');
 const db = require('../db');
-
 const messages = require('../messages');
-let URL = process.env.API || 'http://Karina-MacBookPro.local:3000';
-
 
 const reply = async ({ userId, text }) => {
-  console.log(text);
 
   if (text.match(/\/sign\/\w+/)) {
     let username = text.split(/\/sign\//)[1];

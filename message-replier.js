@@ -1,14 +1,17 @@
 const startReplier = require('./controllers');
+const questionFlow = require('./controllers/questions-flow');
+
 const chainProcessor = require('./chain-processor');
 const messages = require('./messages');
-
+const db = require('./db');
 
 const repliers = [
   startReplier.reply,
+  questionFlow.reply
 ];
 
 const reply = async (message) => {
-  if (message.text === '/start' || message.text === '/help') {
+  if (message.text === '/start' || message.text === '/help' || message.text === '/stop') {
     switch (message.text) {
     case '/start':
       return [{
@@ -20,18 +23,19 @@ const reply = async (message) => {
         text: messages.help,
         options: { parse_mode: 'Markdown' }
       }]
+    case '/stop':
+      await db.reset(message.userId);
+      return [{
+        text: messages.stop,
+        options: { parse_mode: 'Markdown' }
+      }]
     default:
       return null;
     }
   } else {
     try {
-      console.log(message, '!@#!#@!!');
       let replies = await chainProcessor.processAsync(repliers, message);
-
-      console.log(replies, 'rep!!!');
-
       if (!Array.isArray(replies)) replies = [ replies ];
-
       replies = replies.map(reply => {
         if (typeof reply == 'string' && reply.length > 0) {
           return {
@@ -41,9 +45,9 @@ const reply = async (message) => {
         }
         return reply;
       });
-
       return replies;
     } catch (ex) {
+      //eslint-disable-next-line
       console.error(ex);
       return 'An error occurred when calculating the reply';
     }
