@@ -11,7 +11,8 @@ const handleUserId = async (username, telegramId) => {
 
     let user = await collection.findOneAndUpdate({ username}, {
       $set: { telegramId }
-    })
+    },
+    { returnOriginal: false })
     return user.value;
   } catch (err) {
     //eslint-disable-next-line
